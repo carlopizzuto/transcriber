@@ -34,21 +34,26 @@ class OutputFormatter:
             results: Transcription results dictionary
             output_file: Base output filename (extension will be added)
         """
-        base_name = Path(output_file).stem
-        
+        output_path = Path(output_file)
+        if output_path.suffix:
+            output_path = output_path.with_suffix("")
+
         # Save JSON (detailed data)
-        cls._save_json(results, f"{base_name}.json")
-        
+        json_path = output_path.with_suffix(".json")
+        cls._save_json(results, json_path)
+
         # Save readable text
-        cls._save_text(results, f"{base_name}.txt")
-        
+        text_path = output_path.with_suffix(".txt")
+        cls._save_text(results, text_path)
+
         # Save SRT subtitles
-        cls._save_srt(results, f"{base_name}.srt")
-        
+        srt_path = output_path.with_suffix(".srt")
+        cls._save_srt(results, srt_path)
+
         print(f"\nResults saved:")
-        print(f"  • {base_name}.json (detailed data)")
-        print(f"  • {base_name}.txt (readable format)")
-        print(f"  • {base_name}.srt (subtitle format)")
+        print(f"  • {json_path} (detailed data)")
+        print(f"  • {text_path} (readable format)")
+        print(f"  • {srt_path} (subtitle format)")
     
     @staticmethod
     def _save_json(results: Dict, filename: str) -> None:
