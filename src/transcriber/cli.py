@@ -34,7 +34,7 @@ Examples:
 
 Requirements:
     - Set HUGGINGFACE_TOKEN in environment or .env file for speaker diarization
-    - Install ffmpeg for audio format conversion: sudo pacman -S ffmpeg
+    - Install ffmpeg for audio format conversion: sudo pacman -S ffmpeg (Linux) or brew install ffmpeg (Mac)
         """
     )
     
@@ -70,8 +70,8 @@ Requirements:
     )
     parser.add_argument(
         "--device",
-        choices=["cuda", "cpu"],
-        help="Force specific device (auto-detected by default)"
+        choices=["cuda", "mps", "cpu"],
+        help="Force specific device (auto-detected by default): cuda (NVIDIA), mps (Apple Metal), cpu"
     )
     
     args = parser.parse_args()

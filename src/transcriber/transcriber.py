@@ -8,6 +8,7 @@ Uses OpenAI Whisper for transcription and pyannote.audio for speaker diarization
 Requirements:
     - ffmpeg (for audio conversion)
     - CUDA-capable GPU (optional, but recommended for speed)
+    - Apple Silicon Mac with Metal support (optional, but recommended for speed)
     - HuggingFace token for pyannote models
 
 Author: Transcription Tool
@@ -37,14 +38,33 @@ class AudioTranscriber:
         
         Args:
             model_size: Whisper model size ('tiny', 'base', 'small', 'medium', 'large')
-            device: Device to use ('cuda' or 'cpu'). Auto-detected if None.
+            device: Device to use ('cuda', 'mps', or 'cpu'). Auto-detected if None.
         """
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or self._get_best_device()
         self.model_size = model_size
         self.whisper_model = None
         self.diarization_pipeline = None
         
         print(f"Using device: {self.device}")
+    
+    def _get_best_device(self) -> str:
+        """
+        Automatically detect the best available device.
+        
+        Priority order:
+        1. CUDA (NVIDIA GPU)
+        2. MPS (Apple Silicon GPU) 
+        3. CPU (fallback)
+        
+        Returns:
+            str: Best available device name
+        """
+        if torch.cuda.is_available():
+            return "cuda"
+        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            return "mps"
+        else:
+            return "cpu"
     
     def _load_whisper_model(self) -> None:
         """Load the Whisper model for transcription."""
@@ -91,10 +111,10 @@ class AudioTranscriber:
                 print(f"Failed to load diarization pipeline: {e2}")
                 return False
         
-        # Move to GPU if available
-        if self.device == "cuda":
-            print("Moving diarization pipeline to GPU...")
-            self.diarization_pipeline = self.diarization_pipeline.to(torch.device("cuda"))
+        # Move to GPU if available (CUDA or MPS)
+        if self.device in ["cuda", "mps"]:
+            print(f"Moving diarization pipeline to {self.device.upper()}...")
+            self.diarization_pipeline = self.diarization_pipeline.to(torch.device(self.device))
         
         return True
     
